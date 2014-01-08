@@ -19,20 +19,13 @@ function log(client, req, res) {
     return res.send(500, { error: 'log id missing' });
   }
 
-  return logdb.get(id).then(
-    function log(entity) {
-      if (!entity) {
-        return res.send(404);
-      }
+  // everything is 200 right now
+  res.status(200);
+  res.type('text/plain');
 
-      // if the entire log is not complete we return 206
-      var status = (entity.complete) ? 200 : 206;
-      res.status(status);
-      res.type(entity.contentType || 'text/plain');
-      return streamContent(logdb.content(id), res);
-    },
-    function error(err) {
-      console.error(err);
+  streamContent(logdb.content(id), res).then(
+    null,
+    function error() {
       res.send(500, { error: 'database error' });
     }
   );
