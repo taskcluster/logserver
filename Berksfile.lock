@@ -1,0 +1,21 @@
+{
+  "sources": {
+    "postgresql": {
+      "locked_version": "0.13.0",
+      "git": "https://github.com/phlipper/chef-postgresql.git",
+      "ref": "2c412e2f1aebce50d84fe13a3d9c6c544004fad6"
+    },
+    "nodejs": {
+      "locked_version": "1.3.0"
+    },
+    "apt": {
+      "locked_version": "2.2.1"
+    },
+    "yum": {
+      "locked_version": "2.3.4"
+    },
+    "build-essential": {
+      "locked_version": "1.4.2"
+    }
+  }
+}
