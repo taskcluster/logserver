@@ -1,0 +1,23 @@
+#! /usr/bin/env node
+var amqplib = require('amqplib'),
+    LogConsumer = require('../queue/logconsumer');
+
+var connection = amqplib.connect(process.env.CLOUDAMQP_URL);
+
+connection.then(
+  function(connection) {
+    var consumer = new LogConsumer(
+      connection,
+      process.env.DATABASE_URL
+    );
+
+    // begin processing the logs
+    return consumer.consume('logconsumer_v1');
+  },
+  function(err) {
+    console.error('Failed to connect to amqp');
+    console.error(err);
+    process.exit(1);
+  }
+);
+

@@ -4,6 +4,7 @@ POSTGRES_PASS = 'vagrant';
 POSTGRES_CONFIG = <<BASH
   export POSTGRES_TEST_URL=postgres://vagrant:#{POSTGRES_PASS}@127.0.0.1/vagrant_test
   export DATABASE_URL=postgres://vagrant:#{POSTGRES_PASS}@127.0.0.1/vagrant_dev
+  export CLOUDAMQP_URL=amqp://guest:guest@127.0.0.1
 BASH
 
 Vagrant.configure("2") do |config|
@@ -55,7 +56,9 @@ Vagrant.configure("2") do |config|
       "nodejs::install_from_binary",
       "postgresql::server",
       "postgresql::pg_user",
-      "postgresql::pg_database"
+      "postgresql::pg_database",
+      "recipe[rabbitmq]",
+      "recipe[rabbitmq::mgmt_console]"
     ]
   end
 
