@@ -1,0 +1,40 @@
+#! /usr/bin/env node
+
+function migrate(credentials) {
+  var schema = require('log-aggregate-db/schema'),
+      pg = require('pg');
+
+
+  var client = new pg.Client(credentials);
+  client.connect(function(err) {
+    if (err) {
+      console.error('Cannot connect to postgres', err);
+      process.exit(1);
+    }
+
+    var end = client.end.bind(client);
+
+    schema.define(client).then(
+      end,
+      function(err) {
+        end();
+        console.error('Error upgrading schema', err);
+        process.exit(1);
+      }
+    );
+  });
+}
+
+// environment variable to use to find the credentials
+var env = process.argv[2];
+// credentials found by env
+var credentials = process.env[env];
+
+if (!credentials) {
+  console.error('usage: %s %s', process.argv[1], 'DATABASE_URI');
+  console.error('  must pass credentials via enviornment variable.');
+  process.exit(1);
+}
+
+migrate(credentials);
+

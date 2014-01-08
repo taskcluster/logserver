@@ -1,0 +1,5 @@
+/cookbooks/
+/test/
+/Vagrant
+/Berksfile
+/Berksfile.lock
