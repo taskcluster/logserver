@@ -13,9 +13,9 @@ var SQL = {
   findEntity: 'SELECT * FROM log_aggregate_db.entities WHERE id = $1',
 
   insertEntity: 'INSERT INTO log_aggregate_db.entities' +
-                  '("updatedAt", "createdAt", "contentType", owner)' +
+                  '(id, "updatedAt", "createdAt", "contentType", owner)' +
                 'VALUES' +
-                  '(NOW(), NOW(), $1, $2)' +
+                  '($1, NOW(), NOW(), $2, $3)' +
                 'RETURNING id',
 
   updateEntity: 'UPDATE log_aggregate_db.entities SET "updatedAt" = NOW(),',
@@ -102,13 +102,15 @@ Client.prototype = {
   /**
   Create an entity in the log database.
 
+  @param {String} uuid unique id for this entity.
   @param {Object} [config] for the entity.
   @param {String} [config.contentType] content type for the entity.
   @param {String} [config.owner] owner of the entity.
   @return {Promise}
   */
-  create: function(config) {
+  create: function(uuid, config) {
     return this.db.query(SQL.insertEntity, [
+      uuid,
       (config && config.contentType) || '',
       (config && config.owner) || ''
     ]).then(

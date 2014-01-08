@@ -7,9 +7,9 @@ CREATE TABLE IF NOT EXISTS log_aggregate_db.version (
   version INTEGER
 );
 
--- The entity table is the overall reference 
+-- The entity table is the overall reference
 CREATE TABLE IF NOT EXISTS log_aggregate_db.entities (
-  id SERIAL PRIMARY KEY,
+  id UUID UNIQUE PRIMARY KEY,
   "createdAt" TIMESTAMP WITHOUT TIME ZONE,
   "updatedAt" TIMESTAMP WITHOUT TIME ZONE,
 
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS log_aggregate_db.entities (
 CREATE TABLE IF NOT EXISTS log_aggregate_db.parts (
   id SERIAL PRIMARY KEY,
 
-  "entitiesId" INTEGER REFERENCES log_aggregate_db.entities(id) ON DELETE CASCADE,
+  "entitiesId" UUID REFERENCES log_aggregate_db.entities(id) ON DELETE CASCADE,
 
   -- refers to the offset in the overall stream
   "offset" INTEGER,

@@ -2,6 +2,22 @@ suite('client', function() {
   var db = require('./test/db')();
   var Client = require('./client');
   var Promise = require('promise');
+  var uuid = require('uuid');
+
+  function create(options) {
+    var id = uuid.v4();
+    var result = { uuid: id };
+
+    setup(function() {
+      return subject.create(id, options).then(
+        function(returnedId) {
+          result.id = returnedId;
+        }
+      );
+    });
+
+    return result;
+  }
 
   var subject;
   setup(function() {
@@ -9,28 +25,25 @@ suite('client', function() {
   });
 
   suite('#create', function() {
+    var id = uuid.v4();
+
+    var noOptions = create();
+
     test('no options', function() {
-      return subject.create().then(
-        function(id) {
-          assert.ok(id, 'passes id');
-          assert(typeof id === 'number', 'is a number');
-        }
-      );
+      assert.equal(noOptions.uuid, noOptions.id);
     });
 
-    test('contentType + owner', function() {
-      var opts = {
-        contentType: 'application/json',
-        owner: 'owna'
-      };
+    var opts = {
+      contentType: 'application/json',
+      owner: 'owna'
+    };
 
-      return subject.create(opts).then(
-        function(id) {
-          return db.client.query(
-            'SELECT * FROM log_aggregate_db.entities WHERE id = $1',
-            [id]
-          );
-        }
+    var withOptions = create(opts);
+
+    test('contentType + owner', function() {
+      db.client.query(
+        'SELECT * FROM log_aggregate_db.entities WHERE id = $1',
+        [withOptions.uuid]
       ).then(
         function(results) {
           var row = results.rows[0];
@@ -43,15 +56,10 @@ suite('client', function() {
 
   suite('#get', function() {
     var opts = { owner: 'xfoo', contentType: 'woot' };
-    var id;
-    setup(function() {
-      return subject.create(opts).then(function(result) {
-        id = result;
-      });
-    });
+    var record = create(opts);
 
     test('cannot find an id', function() {
-      return subject.get(id + 1000).then(
+      return subject.get(uuid.v4()).then(
         function(value) {
           assert.ok(!value);
         }
@@ -59,9 +67,9 @@ suite('client', function() {
     });
 
     test('finds entity by id', function() {
-      return subject.get(id).then(
+      return subject.get(record.id).then(
         function(value) {
-          assert.equal(value.id, id);
+          assert.equal(value.id, record.id);
           assert.equal(value.owner, opts.owner);
           assert.equal(value.contentType, opts.contentType);
         }
@@ -70,23 +78,18 @@ suite('client', function() {
   });
 
   suite('#delete', function() {
-    var id;
+    var record = create();
+
     setup(function() {
-      return subject.create({ owner: 'foo' }).then(function(result) {
-        id = result;
-      });
+      return subject.addPart(record.id, 0, 1, new Buffer('x'));
     });
 
     setup(function() {
-      return subject.addPart(id, 0, 1, new Buffer('x'));
-    });
-
-    setup(function() {
-      return subject.delete(id);
+      return subject.delete(record.id);
     });
 
     test('get should return falsy', function() {
-      return subject.get(id).then(
+      return subject.get(record.id).then(
         function(value) {
           assert.ok(!value);
         }
@@ -94,7 +97,7 @@ suite('client', function() {
     });
 
     test('has no content', function(done) {
-      var stream = subject.content(id);
+      var stream = subject.content(record.id);
       stream.on('data', function(data) {
         done(new Error('should not have data'));
       });
@@ -103,53 +106,39 @@ suite('client', function() {
   });
 
   suite('#update', function() {
-    var id;
-    setup(function() {
-      return subject.create({ owner: 'foo' }).then(function(result) {
-        id = result;
-      });
-    });
+    var opts = { owner: 'foo' };
+    var record = create(opts);
 
     setup(function() {
-      return subject.update(id, {
+      return subject.update(record.id, {
         complete: true
       });
     });
 
     test('updates complete but not foo', function() {
-      var query = 'SELECT * FROM log_aggregate_db.entities ' +
-                    'WHERE id = $1';
-
-      return db.client.query(query, [id]).then(
-        function(result) {
-          var row = result.rows[0];
+      return subject.get(record.id).then(
+        function(row) {
           assert.ok(row, 'has record');
           assert.ok(row.complete);
-          assert.equal(row.owner, 'foo');
+          assert.equal(row.owner, opts.owner);
         }
       );
     });
   });
 
   suite('#addPart', function() {
+    var record = create();
     var buffer = new Buffer('woot!');
 
-    var id;
     setup(function() {
-      return subject.create().then(function(result) {
-        id = result;
-      });
-    });
-
-    setup(function() {
-      return subject.addPart(id, 0, buffer.length, buffer);
+      return subject.addPart(record.id, 0, buffer.length, buffer);
     });
 
     test('part is added', function() {
       var query =
         'SELECT * FROM log_aggregate_db.parts WHERE "entitiesId" = $1';
 
-      return db.client.query(query, [id]).then(
+      return db.client.query(query, [record.id]).then(
         function(result) {
           assert.ok(result);
           assert.equal(result.rowCount, 1);
@@ -181,14 +170,7 @@ suite('client', function() {
     ];
 
     var expectedFinalBuffer = Buffer.concat(parts);
-
-    // entity id
-    var id;
-    setup(function() {
-      return subject.create().then(function(result) {
-        id = result;
-      });
-    });
+    var record = create();
 
     // we need to add some parts to the entity
     setup(function() {
@@ -197,7 +179,7 @@ suite('client', function() {
       parts.forEach(function(part) {
         var length = part.length;
         promises.push(subject.addPart(
-          id,
+          record.id,
           offset,
           length,
           part
@@ -215,7 +197,7 @@ suite('client', function() {
       var offset = Math.floor(expectedFinalBuffer.length / 2);
       var expected = expectedFinalBuffer.slice(offset);
 
-      var stream = subject.content(id, offset);
+      var stream = subject.content(record.id, offset);
       var buffers = [];
       stream.on('data', function(buffer) {
         buffers.push(buffer);
@@ -232,7 +214,7 @@ suite('client', function() {
     });
 
     test('stream from begining', function(done) {
-      var stream = subject.content(id);
+      var stream = subject.content(record.id);
       var buffers = [];
       stream.on('data', function(buffer) {
         buffers.push(buffer);
