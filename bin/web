@@ -1,6 +1,7 @@
 #! /usr/bin/env node
 
-var server = require('express')(),
+var express = require('express'),
+    server = express(),
     pg = require('pg'),
     Promise = require('promise');
 
@@ -19,6 +20,8 @@ function dbPromise(promiseFn) {
     });
   }
 }
+
+server.use(express.compress());
 
 server.get(
   '/log/:id/content',
