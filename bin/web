@@ -2,7 +2,7 @@
 
 var server = require('express')(),
     pg = require('pg'),
-    Promise = require('Promise');
+    Promise = require('promise');
 
 function dbPromise(promiseFn) {
   return function(req, res, next) {
