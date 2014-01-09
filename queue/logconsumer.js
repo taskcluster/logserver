@@ -26,12 +26,6 @@ LogConsumer.prototype = {
           return reject(err);
         }
 
-        console.log(
-          'running',
-          headers.type,
-          message.properties.messageId
-        );
-
         var operation = this.addEntity(
           client,
           message.properties.messageId,

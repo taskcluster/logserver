@@ -1,5 +1,5 @@
 suite('routes/log', function() {
-  var app = require('../web'),
+  var app = require('../bin/web'),
       request = require('supertest'),
       db = require('../test/db')(),
       uuid = require('uuid');

@@ -22,7 +22,7 @@ function dbPromise(promiseFn) {
 
 server.get(
   '/log/:id/content',
-  dbPromise(require('./routes/log_content'))
+  dbPromise(require('../routes/log_content'))
 );
 
 if (require.main === module) {

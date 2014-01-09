@@ -2,7 +2,7 @@ suite('bin/logworker', function() {
   var uuid = require('uuid');
   var db = require('../test/db')();
   var amqp = require('../test/amqp')();
-  var app = require('../web');
+  var app = require('./web');
   var request = require('supertest');
 
   // start the worker
