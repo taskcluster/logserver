@@ -1,0 +1,40 @@
+#! /usr/bin/env node
+
+function migrate(credentials) {
+  var amqp = require('amqplib'),
+      schema = require('../queue/schema');
+
+
+  var connection;
+  amqp.connect(credentials).then(
+    function(_connection) {
+      connection = _connection;
+      return schema.define(connection)
+    }
+  ).then(
+    function() {
+      return connection.close();
+    }
+  ).then(
+    null,
+    function (err) {
+      console.error(err);
+      process.exit(1);
+    }
+  );
+}
+
+// environment variable to use to find the credentials
+var env = process.argv[2];
+// credentials found by env
+var credentials = process.env[env];
+
+if (!credentials) {
+  console.error('usage: %s %s', process.argv[1], 'CLOUDAMQP_URL');
+  console.error('  must pass credentials via enviornment variable.');
+  process.exit(1);
+}
+
+migrate(credentials);
+
+
