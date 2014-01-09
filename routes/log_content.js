@@ -15,6 +15,8 @@ function log(client, req, res) {
   var logdb = new ClientLog(client);
   var id = req.params.id;
 
+  console.log('fetching request for', id);
+
   if (!id) {
     return res.send(500, { error: 'log id missing' });
   }
@@ -25,7 +27,8 @@ function log(client, req, res) {
 
   streamContent(logdb.content(id), res).then(
     null,
-    function error() {
+    function error(err) {
+      console.error('failed to talk to db', err);
       res.send(500, { error: 'database error' });
     }
   );
