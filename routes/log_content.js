@@ -23,6 +23,7 @@ function log(client, req, res) {
 
   // everything is 200 right now
   res.status(200);
+  res.charset = 'utf-8';
   res.type('text/plain');
 
   streamContent(logdb.content(id), res).then(

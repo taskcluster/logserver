@@ -8,8 +8,9 @@ suite('routes/log', function() {
     test('stream', function(done) {
       request(app).
         get('/log/' + uuid.v4() + '/content').
-        expect('Content-Type', 'text/plain').
+        expect('Content-Type', /text\/plain/).
         end(function(err, result) {
+          if (err) return done(err);
           assert.ok(!result.res.text, 'body is empty');
           done(err);
         });
@@ -28,7 +29,7 @@ suite('routes/log', function() {
       request(app).
         get('/log/' + id + '/content').
         expect(200).
-        expect('Content-Type', 'text/plain').
+        expect('Content-Type', /text\/plain/).
         end(function(err, result) {
           assert.equal(result.text, content.toString());
           done(err);
